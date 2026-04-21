@@ -55,9 +55,78 @@ if n_upload and e_upload:
     choice = st.sidebar.selectbox("Graph Type", ["Undirected", "Directed"]) 
     
     # Generate the Graph from CSV Files
-    final_Graph = build_network(df_edges, df_nodes, choice)
+    G = build_network(df_edges, df_nodes, choice)
     
     # Summary Metrics
     st.write(f"### Current Statistics:")
-    st.info(f"The network has {final_Graph.number_of_nodes()} nodes and {final_Graph.number_of_edges()} edges.")
-    
+    st.info(f"The network has {G.number_of_nodes()} nodes and {G.number_of_edges()} edges.")
+    # ----- Custom Section -----
+st.markdown("___")
+st.header("🔎 Network Metrics & Analysis")
+
+# زر لتنفيذ العملية عند الطلب
+trigger_pr = st.button("Run PageRank Analysis")
+
+if trigger_pr:
+    with st.spinner("Processing PageRank computation..."):
+
+        # حساب القيم
+        pr_results = nx.pagerank(G)
+
+        # تخزين النتائج داخل الجراف
+        nx.set_node_attributes(G, values=pr_results, name="PageRank")
+
+        # تجهيز البيانات للعرض
+        df_pr = pd.DataFrame(
+            [(node, score) for node, score in pr_results.items()],
+            columns=["Node", "Score"]
+        )
+
+        # إضافة أسماء (لو موجودة)
+        node_labels = nx.get_node_attributes(G, "Label")
+        if len(node_labels) > 0:
+            df_pr["Node Name"] = df_pr["Node"].map(node_labels)
+            df_pr = df_pr[["Node", "Node Name", "Score"]]
+
+        # ترتيب النتائج
+        df_pr = df_pr.sort_values(by="Score", ascending=False).reset_index(drop=True)
+
+        # عرض أفضل النتائج
+        st.subheader("Top Ranked Nodes")
+        st.dataframe(df_pr.iloc[:10])
+
+        st.success("PageRank computation completed and graph updated!")
+
+# --- زر لتنفيذ حساب الـ Betweenness Centrality ---
+trigger_bc = st.button("Run Betweenness Centrality Analysis")
+
+if trigger_bc:
+    with st.spinner("Finding the bridges in the network..."):
+
+        # 1. حساب القيم
+        bc_results = nx.betweenness_centrality(G)
+
+        # 2. تخزين النتائج داخل الجراف
+        nx.set_node_attributes(G, values=bc_results, name="Betweenness")
+
+        # 3. تجهيز البيانات للعرض
+        df_bc = pd.DataFrame(
+            [(node, score) for node, score in bc_results.items()],
+            columns=["Node", "Betweenness Score"]
+        )
+
+        # 4. إضافة أسماء (لو موجودة)
+        node_labels = nx.get_node_attributes(G, "Label")
+        if len(node_labels) > 0:
+            df_bc["Node Name"] = df_bc["Node"].map(node_labels)
+            # إعادة ترتيب الأعمدة
+            df_bc = df_bc[["Node", "Node Name", "Betweenness Score"]]
+
+        # 5. ترتيب النتائج من الأعلى للأقل
+        df_bc = df_bc.sort_values(by="Betweenness Score", ascending=False).reset_index(drop=True)
+
+        # 6. عرض أفضل النتائج
+        st.subheader(" Top Information Brokers (Betweenness)")
+        st.dataframe(df_bc.iloc[:10])
+
+        st.success(" Betweenness Centrality computation completed!")        
