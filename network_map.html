@@ -33,7 +33,7 @@
 
              #mynetwork {
                  width: 100%;
-                 height: 500px;
+                 height: 600px;
                  background-color: #222222;
                  border: 1px solid lightgray;
                  position: relative;
@@ -88,8 +88,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#00ffcc", "font": {"color": "white"}, "id": "1", "label": "1", "shape": "dot", "size": 15, "title": "Node ID: 1 | Connections: 3"}, {"color": "#00ffcc", "font": {"color": "white"}, "id": "2", "label": "2", "shape": "dot", "size": 15, "title": "Node ID: 2 | Connections: 3"}, {"color": "#00ffcc", "font": {"color": "white"}, "id": "3", "label": "3", "shape": "dot", "size": 15, "title": "Node ID: 3 | Connections: 3"}, {"color": "#00ffcc", "font": {"color": "white"}, "id": "4", "label": "4", "shape": "dot", "size": 10, "title": "Node ID: 4 | Connections: 2"}, {"color": "#00ffcc", "font": {"color": "white"}, "id": "5", "label": "5", "shape": "dot", "size": 15, "title": "Node ID: 5 | Connections: 3"}]);
-                  edges = new vis.DataSet([{"from": "1", "to": "2"}, {"from": "1", "to": "3"}, {"from": "1", "to": "5"}, {"from": "2", "to": "3"}, {"from": "2", "to": "5"}, {"from": "3", "to": "4"}, {"from": "4", "to": "5"}]);
+                  nodes = new vis.DataSet([{"color": "#1f78b4", "font": {"color": "white"}, "id": "1761", "label": "1761", "physics": false, "shape": "dot", "size": 15, "title": "Node ID: 1761\nLabel: \nConnections: 2", "x": -363.75281758297916, "y": 944.6877512292334}, {"color": "#1f78b4", "font": {"color": "white"}, "id": "1780", "label": "MENNA", "physics": false, "shape": "dot", "size": 15, "title": "Node ID: 1780\nLabel: MENNA\nConnections: 2", "x": 1000.0, "y": -157.32469488958964}, {"color": "#1f78b4", "font": {"color": "white"}, "id": "1551", "label": "nesreen", "physics": false, "shape": "dot", "size": 15, "title": "Node ID: 1551\nLabel: nesreen\nConnections: 2", "x": -636.2471824170203, "y": -787.3630563396438}]);
+                  edges = new vis.DataSet([{"from": "1761", "label": "", "to": "1551", "width": 1.0}, {"from": "1761", "label": "", "to": "1780", "width": 1.0}, {"from": "1780", "label": "", "to": "1551", "width": 1.0}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
@@ -119,7 +119,7 @@
         "hideNodesOnDrag": false
     },
     "physics": {
-        "enabled": true,
+        "enabled": false,
         "stabilization": {
             "enabled": true,
             "fit": true,
