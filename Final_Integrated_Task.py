@@ -49,10 +49,15 @@ def build_network(e_data, n_data, graph_type):
     return my_graph
 
 def check_detection():
+
     """Check if community detection has been run before evaluating"""
+
     if 'partition' not in st.session_state:
+
         st.error("⚠️ Please run 'Detect Communities' first to generate data!")
+
         return False
+
     return True
 
 # دالة مساعدة لتوليد ألوان ثابتة بناءً على القيم
@@ -86,16 +91,27 @@ with col_left_menu:
         btn_centralities = st.button("Run Degree & Closeness Centrality")
 
     with st.expander("🏘️ 5. Community Detection", expanded=True):
+
         algo_choice = st.selectbox("Select Algorithm", ["Louvain", "Girvan-Newman"])
+
         btn_detect = st.button("Detect Communities")
-        
+
+       
+
         st.divider()
+
         st.write("**Evaluation Metrics**")
+
         btn_modularity = st.button("1. Modularity")
+
         btn_silhouette = st.button("2. Silhouette Score")
+
         btn_nmi = st.button("3. NMI Score")
-        
+
+       
+
         st.divider()
+
         btn_compare = st.button("📊 Compare Algorithms")
 
 # --- 4. Main Workspace (Results Area) ---
@@ -140,12 +156,19 @@ with col_main:
         pr_cent = nx.pagerank(raw_Graph)
         
         undirected_G = raw_Graph.to_undirected() if raw_Graph.is_directed() else raw_Graph
+
         communities = community_louvain.best_partition(undirected_G)
 
-        # 5. إضافة القيم دي جوه الـ Graph لكل Node
+
+
+        # إضافة القيم دي جوه الـ Graph لكل Node
+
         nx.set_node_attributes(raw_Graph, deg_cent, 'Degree_Cent')
+
         nx.set_node_attributes(raw_Graph, bet_cent, 'Betweenness')
+
         nx.set_node_attributes(raw_Graph, pr_cent, 'PageRank')
+
         nx.set_node_attributes(raw_Graph, communities, 'Community')
 
 
@@ -310,14 +333,16 @@ with col_main:
                 
                 # 1. تحديد الحجم (Size)
                 if size_choice == "Degree Centrality":
-                    # نضرب في رقم كبير عشان الحجم يظهر بوضوح
-                    node_size = max(node_data.get('Degree_Cent', 0) * 100, 10)
+                    # بنضرب في 300 عشان تبان الفروق
+                    node_size = 10 + (node_data.get('Degree_Cent', 0) * 300)
                 elif size_choice == "Betweenness":
-                    node_size = max(node_data.get('Betweenness', 0) * 300, 10)
+                    # البتويينيس أرقامها أصغر فبنضرب في 1000
+                    node_size = 10 + (node_data.get('Betweenness', 0) * 1000)
                 elif size_choice == "PageRank":
-                    node_size = max(node_data.get('PageRank', 0) * 500, 10)
+                    # البيدج رانك أرقامها متناهية الصغر للشبكات الكبيرة، فهنضرب في 5000
+                    node_size = 10 + (node_data.get('PageRank', 0) * 5000)
                 else:
-                    node_size = 15 
+                    node_size = 15
                 
                 # 2. تحديد اللون (Color)
                 if color_choice == "Community":
@@ -388,66 +413,75 @@ with col_main:
 
         # --- Tab 4: Metrics Master Results ---
         # داخل tab_metrics:
-with tab_metrics:
-    if btn_global:
-        with st.spinner("Calculating Global Metrics..."):
-            m = calculate_global_metrics(final_Graph)
-            c1, c2, c3, c4, c5 = st.columns(5) 
+        with tab_metrics:
+            if btn_global:
+                with st.spinner("Calculating Global Metrics..."):
+                    m = calculate_global_metrics(final_Graph)
+                    c1, c2, c3, c4, c5 = st.columns(5) 
+                            
+                    c1.metric("Avg. Degree", f"{m['Avg. Degree']:.2f}")
+                    c2.metric("Density", f"{m['Density']:.4f}")
+                    c3.metric("Avg. Clustering", f"{m['Avg. Clustering Coeff.']:.4f}")
                     
-            c1.metric("Avg. Degree", f"{m['Avg. Degree']:.2f}")
-            c2.metric("Density", f"{m['Density']:.4f}")
-            c3.metric("Avg. Clustering", f"{m['Avg. Clustering Coeff.']:.4f}")
+                    # 2. إضافة الـ Average Path Length (سواء للشبكة كاملة أو الـ LCC)
+                    path_label = 'Avg. Path Length' if 'Avg. Path Length' in m else 'Avg. Path Length (LCC)'
+                    c4.metric(path_label, f"{m[path_label]:.2f}")
+                    
+                    # 3. عرض القطر في العمود الخامس
+                    diam_label = 'Network Diameter' if 'Network Diameter' in m else 'Network Diameter (LCC)'
+                    c5.metric(diam_label, m[diam_label])
+                    
             
-            # 2. إضافة الـ Average Path Length (سواء للشبكة كاملة أو الـ LCC)
-            path_label = 'Avg. Path Length' if 'Avg. Path Length' in m else 'Avg. Path Length (LCC)'
-            c4.metric(path_label, f"{m[path_label]:.2f}")
-            
-            # 3. عرض القطر في العمود الخامس
-            diam_label = 'Network Diameter' if 'Network Diameter' in m else 'Network Diameter (LCC)'
-            c5.metric(diam_label, m[diam_label])
-            
-     
 
-            st.divider()
-            
-            # --- رسم توزيع الدرجات (Degree Distribution) ---
-            st.write("### 📊 Degree Distribution")
-            degree_sequence = [d for n, d in final_Graph.degree()]
-            degree_counts = pd.Series(degree_sequence).value_counts().sort_index()
-            df_dist = pd.DataFrame({"Degree": degree_counts.index, "Number of Nodes": degree_counts.values})
-            st.bar_chart(df_dist, x="Degree", y="Number of Nodes")
+                    st.divider()
+                    
+                    # --- رسم توزيع الدرجات (Degree Distribution) ---
+                    st.write("### 📊 Degree Distribution")
+                    degree_sequence = [d for n, d in final_Graph.degree()]
+                    degree_counts = pd.Series(degree_sequence).value_counts().sort_index()
+                    df_dist = pd.DataFrame({"Degree": degree_counts.index, "Number of Nodes": degree_counts.values})
+                    st.bar_chart(df_dist, x="Degree", y="Number of Nodes")
 
-    if btn_centralities:
-        with st.spinner("Calculating Centralities..."):
-            d_cent = nx.degree_centrality(final_Graph)
-            c_cent = nx.closeness_centrality(final_Graph)
-            # إضافة الـ Local Clustering لكل Node
-            l_clust = nx.clustering(final_Graph.to_undirected())
-            
-            df_metrics = pd.DataFrame({
-                "Node": list(d_cent.keys()),
-                "Degree Centrality": list(d_cent.values()),
-                "Closeness Centrality": list(c_cent.values()),
-                "Clustering Coefficient": [l_clust[n] for n in d_cent.keys()]
-            })
-            
-            if node_labels:
-                df_metrics["Node Name"] = df_metrics["Node"].map(node_labels)
-            
-            st.write("### 📊 Node Metrics Table (Centralities & Clustering)")
-            st.dataframe(df_metrics.sort_values(by="Degree Centrality", ascending=False), use_container_width=True)
-            
-            if not btn_global and not btn_centralities:
-                st.info("Click a button from the 'Metrics Master' panel to see results here.")
+            if btn_centralities:
+                with st.spinner("Calculating Centralities..."):
+                    d_cent = nx.degree_centrality(final_Graph)
+                    c_cent = nx.closeness_centrality(final_Graph)
+                    # إضافة الـ Local Clustering لكل Node
+                    l_clust = nx.clustering(final_Graph.to_undirected())
+                    
+                    df_metrics = pd.DataFrame({
+                        "Node": list(d_cent.keys()),
+                        "Degree Centrality": list(d_cent.values()),
+                        "Closeness Centrality": list(c_cent.values()),
+                        "Clustering Coefficient": [l_clust[n] for n in d_cent.keys()]
+                    })
+                    
+                    if node_labels:
+                        df_metrics["Node Name"] = df_metrics["Node"].map(node_labels)
+                    
+                    st.write("### 📊 Node Metrics Table (Centralities & Clustering)")
+                    st.dataframe(df_metrics.sort_values(by="Degree Centrality", ascending=False), use_container_width=True)
+                    
+                    if not btn_global and not btn_centralities:
+                        st.info("Click a button from the 'Metrics Master' panel to see results here.")
 
         # --- Tab 5: Community Detection Processing ---
+        # --- Tab 5: Community Detection Processing ---
         with tab_comm:
+            
+            # --- [الجزء الجديد اللي هيحل المشكلة] ---
+            if 'show_detection' not in st.session_state and not btn_detect:
+                st.info("👈 Please select an algorithm from the 'Community Detection' panel on the left and click 'Detect Communities' to see results.")
+            # ----------------------------------------
+
             if btn_detect:
                 with st.spinner(f"Running {algo_choice}..."):
                     working_G = final_Graph.to_undirected() if final_Graph.is_directed() else final_Graph
+                    
                     if algo_choice == "Louvain":
                         partition = community_louvain.best_partition(working_G)
                     else:
+                        # Girvan-Newman
                         from networkx.algorithms.community import girvan_newman
                         partition = {node: i for i, c in enumerate(next(girvan_newman(working_G))) for node in c}
                     
@@ -455,11 +489,14 @@ with tab_metrics:
                     st.session_state['last_algo'] = algo_choice
                     st.session_state['show_detection'] = True
 
+            # 3. عرض النتائج
             if 'show_detection' in st.session_state:
+                st.success("✅ Detection Complete!")
                 st.write(f"### 🏘️ Algorithm Used: {st.session_state['last_algo']}")
                 df_res = pd.DataFrame(list(st.session_state['partition'].items()), columns=["Node", "Community ID"])
                 st.dataframe(df_res.head(10), use_container_width=True)
 
+            # --- باقي زراير الـ Evaluation Metrics زي ما هي عندك ---
             if btn_modularity and check_detection():
                 working_G = final_Graph.to_undirected() if final_Graph.is_directed() else final_Graph
                 score = community_louvain.modularity(st.session_state['partition'], working_G)
@@ -488,48 +525,70 @@ with tab_metrics:
                     st.warning("Please upload Ground Truth file to calculate NMI.")
 
             if btn_compare:
+
                 with st.spinner("Calculating comprehensive comparison..."):
+
                     working_G = final_Graph.to_undirected() if final_Graph.is_directed() else final_Graph
+
                     adj_matrix = nx.to_numpy_array(final_Graph)
-                    
+
+                   
+
                     # Louvain
+
                     p_louvain = community_louvain.best_partition(working_G)
+
                     m_louvain = community_louvain.modularity(p_louvain, working_G)
+
                     s_louvain = silhouette_score(adj_matrix, list(p_louvain.values())) if len(set(p_louvain.values())) > 1 else 0
-                    
+
+                   
+
                     # Girvan-Newman
+
                     from networkx.algorithms.community import girvan_newman
+
                     p_gn = {node: i for i, c in enumerate(next(girvan_newman(working_G))) for node in c}
+
                     m_gn = community_louvain.modularity(p_gn, working_G)
+
                     s_gn = silhouette_score(adj_matrix, list(p_gn.values())) if len(set(p_gn.values())) > 1 else 0
 
+
+
                     nmi_louvain, nmi_gn = "N/A", "N/A"
+
                     if gt_upload:
+
                         df_gt = pd.read_csv(gt_upload)
+
                         gt_dict = dict(zip(df_gt['Id'], df_gt['Community']))
+
                         common = [n for n in final_Graph.nodes() if n in gt_dict]
+
                         if common:
+
                             nmi_louvain = f"{normalized_mutual_info_score([gt_dict[n] for n in common], [p_louvain[n] for n in common]):.4f}"
+
                             nmi_gn = f"{normalized_mutual_info_score([gt_dict[n] for n in common], [p_gn[n] for n in common]):.4f}"
 
+
+
                     st.write("### ⚖️ Comprehensive Algorithm Comparison")
+
                     comp_df = pd.DataFrame({
+
                         "Metric": ["Communities Found", "Modularity (Internal)", "Silhouette (Internal)", "NMI (External)"],
+
                         "Louvain": [len(set(p_louvain.values())), f"{m_louvain:.4f}", f"{s_louvain:.4f}", nmi_louvain],
+
                         "Girvan-Newman": [len(set(p_gn.values())), f"{m_gn:.4f}", f"{s_gn:.4f}", nmi_gn]
+
                     })
+
                     st.table(comp_df)
 
-        # --- 5. Quick Search Feature (Task 6 Bonus) ---
-        st.divider()
-        st.header("🔍 Quick Node Lookup")
-        search_node = st.text_input("Search for a node by Label (e.g., Name):")
-        if search_node:
-            search_res = df_nodes[df_nodes['Label'].str.contains(search_node, case=False, na=False)]
-            if not search_res.empty:
-                st.write("✅ Node Details Found:", search_res)
-            else:
-                st.warning("❌ Node not found in the uploaded data.")
+        
 
     else:
         st.warning("👈 Please upload Nodes and Edges to begin.")
